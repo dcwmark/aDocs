@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+
+# Linux
+.directory
+
+# Node
+node_modules/
+
+# docs
+claude.ai/
+
+# Web Development
+*.min.js
+*.min.css
+*.map
+
+# general
+.env
+.vscode
+dist/
+*.log
+package-lock.json
+
+# special exclude
+Auto Finnancing
