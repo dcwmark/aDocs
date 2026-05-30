@@ -1,0 +1,37 @@
+=== Jeep
+==== Wrangler 4xe
+
+##2025##
+
+https://www.edmunds.com/jeep/wrangler-4xe/2025/msrp/#:~:text=Trims,%2465%2C191[^]
+
+[cols="1,1,1,1"]
+|===
+| Trims | MSRP | Invoice Price | Edmunds Suggested
+
+|Sport S >| $52,690 >| $51,930 >| $46,141
+|Willys >| $57,430 >| $56,195 >| $50,736
+|Sahara >| $59,690 >| $58,825 >| $52,927
+|Rubicon >| $63,390 >| $62,162 >| $56,514
+|Backcountry >| $66,285 >| $64,761 >| $59,321
+|Willys \'41 >| $61,925 >| $60,241 >| $60,094
+|Rubicon X >| $72,340 >| $70,218 >| $65,191"
+|===
+
+##2026##
+
+https://www.edmunds.com/jeep/wrangler/2026/msrp/#:~:text=Trims,%2455%2C005[^]
+
+[cols="1,1,1,1"]
+|===
+| Trims | MSRP | Invoice Price | Edmunds Suggested
+
+|Sport >| $35,780 >| $35,071 >| $34,727
+|Sport S >| $40,030 >| $38,897 >| $38,845
+|Willys >| $44,100 >| $42,559 >| $42,788
+|Rubicon >| $46,760 >| $45,194 >| $45,365
+|Sahara Most Popular >| $49,880 >| $48,444 >| $48,850
+|Sport RHD >| $50,735 >| $49,516 >| $49,871
+|Rubicon X >| $56,710 >| $54,150 >| $55,005
+
+
