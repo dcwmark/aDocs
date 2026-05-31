@@ -1,0 +1,126 @@
+= Post-Mortem Incident Report: Resolving Linux Kernel Panic & Display Server Collisions
+:author: Systems Engineering Archive
+:date: May 2026
+:toc: left
+:toclevels: 3
+:icons: font
+:source-highlighter: rouge
+:description: An archival post-mortem detailing the root cause analysis, diagnostic pipeline, and system-level remediation steps used to recover a system from a critical boot kernel panic following major packaging upgrades.
+
+== Executive Summary
+Following a forced system upgrade, the primary Linux environment experienced a critical kernel panic loop during the early boot sequence, rendering the graphical user interface completely inaccessible. 
+
+This recovery log documents the systemic diagnostic pipeline used to isolate the panic root cause, repair corrupted package dependencies, and transition the display server stack away from failing components to a stable, native architecture.
+
+---
+
+== 1. Phase I: Root Cause Analysis & Diagnostic Mapping
+
+When the system failed to boot into the display target, the boot parameters were modified to bypass quiet initialization, exposing the underlying system failures.
+
+=== Step A: Kernel Panic Isolation
+By interrogating the raw system log output at boot, the kernel panic was traced back to critical circular dependency grip locks involving core packaging tools. The primary bottleneck stemmed from an unresolvable collision sequence between:
+`pyinstaller` <-> `python3-pyinstaller` <-> `powershell-empire`
+
+This packaging deadlock caused the initial ramdisk (`initramfs`) to build incorrectly during upgrades, resulting in unmappable memory allocations during subsequent boots.
+
+=== Step B: Application Launch Latency Diagnostics
+Once emergency access was restored, secondary symptoms emerged where major graphical user interface (UI) applications (specifically Google Chrome and Brave) suffered a severe 60-second launch delay. 
+
+Diagnostics revealed a major architectural mismatch: the system was running a **KDE-based Display Manager (SDDM)** to initialize a **GNOME Desktop Session (GTK/Mutter)**. This mismatch caused:
+* Broken D-Bus secure credentials communication pipelines.
+* Complete failures of the native `gnome-keyring-daemon` to capture initialization states.
+* Severe input-translation locks, causing Brave to entirely ignore system-wide "Natural Scrolling" trackpad configurations.
+
+---
+
+== 2. Phase II: Emergency System Recovery (Breaking Package Locks)
+
+To stabilize the operating system kernel and allow clean configuration updates, the broken circular package dependencies had to be forcefully extracted.
+
+[source,bash]
+----
+# Forcefully purge the locking package architectures without checking sub-dependencies
+sudo dpkg --purge --force-all python3-pyinstaller pyinstaller powershell-empire
+
+# Clear out any residual corrupted installation scripts
+sudo apt-get clean
+sudo apt-get autoremove -y
+
+# Force re-evaluation of system package trees and rebuild the initramfs
+sudo apt-get install -f
+----
+
+With the dependency deadlock removed, the package manager successfully generated a valid, uncorrupted kernel image, resolving the boot-loop kernel panic.
+
+---
+
+== 3. Phase III: Display Infrastructure Migration (KDE/SDDM to GNOME/GDM3)
+
+To permanently fix the application load freezes and input direction errors, the system infrastructure was converted entirely to a native, unified GNOME environment.
+
+=== Step A: Installing the Native GNOME Manager
+The official GNOME Display Manager (`gdm3`) and authentication frameworks were pulled down to replace the broken SDDM pipeline:
+
+[source,bash]
+----
+sudo apt update
+sudo apt install gdm3 gnome-session gnome-shell-extensions -y
+----
+
+=== Step B: Reconfiguring the Display Daemon Target
+During deployment, the default system target was forcefully shifted away from SDDM:
+
+[source,bash]
+----
+# Trigger manual package reconfiguration to select gdm3
+sudo dpkg-reconfigure gdm3
+
+# Explicitly disable and stop the conflicting KDE display service
+sudo systemctl stop sddm
+sudo systemctl disable sddm
+
+# Force the system to enable and default to the native GNOME pipeline
+sudo systemctl enable gdm3
+sudo systemctl set-default graphical.target
+----
+
+---
+
+== 4. Phase IV: Fine-Tuning Application Display Pipelines & Input Matrices
+
+Following the switch to GDM3, the sandboxed browsers were optimized to natively communicate with the new display layer instead of utilizing legacy emulation hooks.
+
+=== Step A: Transitioning Browsers to Native Wayland Processing
+To allow Google Chrome and Brave to inherit GNOME's system-wide touchpad configurations (such as **Natural Scrolling**), their rendering engines were shifted from legacy X11 to the Wayland pipeline.
+
+For Brave, a persistent local runtime flag configuration file was injected:
+[source,bash]
+----
+mkdir -p ~/.config/ && echo "--ozone-platform=wayland" >> ~/.config/brave-flags.conf
+----
+
+For Google Chrome, an identical localized override file was written to bypass deprecated UI flag experiments:
+[source,bash]
+----
+mkdir -p ~/.config/ && echo "--ozone-platform=wayland" >> ~/.config/chrome-flags.conf
+----
+
+=== Step B: Verifying Environmental Stability
+To ensure all configuration profiles parsed correctly without breaking terminal color-rendering arrays (`$PS1` raw code leaks), the browser threads were refreshed cleanly:
+
+[source,bash]
+----
+# Terminate lingering background rendering instances
+pkill -9 -f chrome
+pkill -9 -f brave
+
+# Re-initialize a clean, unbugged user shell instance
+bash
+----
+
+== 5. Conclusion & Current System State
+The system has been successfully restored to a fully operational state. The packaging locks responsible for the kernel panic have been extracted, the underlying display architecture has been cleanly migrated to GDM3, and all UI applications now utilize native Wayland rendering. Applications launch instantaneously, and input peripherals perfectly obey global system inversion rules.
+
+---
+_End of Post-Mortem Recovery Document — Permanent Archival File Format._
